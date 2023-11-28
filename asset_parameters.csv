@@ -1,0 +1,4 @@
+Type;ID;Name;Power;Efficiency
+Import;natural-gas-import-ID;NaturalGas_Import;1000000000000.0;
+PowerPlant;gas-powered-power-plant-ID;GasPowered_PowerPlant;2000000000.0;0.7
+ElectricityDemand;electricity-demand-ID;ElectricityDemand;0.0;
