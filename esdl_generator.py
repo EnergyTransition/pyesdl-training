@@ -2,6 +2,8 @@ from esdl import esdl
 from esdl.edr.client import EDRClient
 from esdl.esdl_handler import EnergySystemHandler
 import pandas as pd
+from esdl.profiles.influxdbprofilemanager import InfluxDBProfileManager
+from setuptools.msvc import winreg
 
 
 def tutorial1_esdl(folder_name, file_name):
@@ -112,9 +114,9 @@ def tutorial1_esdl(folder_name, file_name):
 
 
 # Load an existing ESDL file, iterate over ESDL elements, and change PowerPlant's efficiency
-def tutorial2_esdl(folder_name, file_name):
+def tutorial2_esdl(folder_name, file_name_to_edit, file_name_to_save):
     energy_system_handler = EnergySystemHandler()
-    energy_system: esdl.EnergySystem = energy_system_handler.load_file(folder_name + "/" + file_name)
+    energy_system: esdl.EnergySystem = energy_system_handler.load_file(folder_name + "/" + file_name_to_edit)
 
     print("Changing PowerPlant's efficiency...")
     # Use eAllContents() to iterate over ESDL elements
@@ -124,15 +126,67 @@ def tutorial2_esdl(folder_name, file_name):
         # Get the PowerPlant ESDL element
         if isinstance(esdl_element, esdl.PowerPlant):
             esdl_element.efficiency = 0.7
-    energy_system_handler.save(folder_name + "/" + file_name)
-    return
+    energy_system_handler.save(folder_name + "/" + file_name_to_save)
 
 
 # EDR client to get the wind profile
-def tutorial3_esdl(folder_name, file_name):
+def tutorial3_esdl(folder_name, file_name_to_edit, file_name_to_save):
+    energy_system_handler = EnergySystemHandler()
+
+    # Get the Tutorial2
+    energy_system: esdl.EnergySystem = energy_system_handler.load_file(folder_name + "/" + file_name_to_edit)
+
+    # Create a wind park
+    wind_park = esdl.WindPark(id='wind-park-ID', name='WindPark')
+
+    # Create a polygon
+    point1 = esdl.Point(lat=52.04386412846831, lon=4.3002596497535714)
+    point2 = esdl.Point(lat=52.04386577818243, lon=4.300523847341538)
+    point3 = esdl.Point(lat=52.04376349579175, lon=4.300515800714494)
+    point4 = esdl.Point(lat=52.043746173750776, lon=4.30023953318596)
+
+    subpolygon = esdl.SubPolygon()
+    subpolygon.point.append(point1)
+    subpolygon.point.append(point2)
+    subpolygon.point.append(point3)
+    subpolygon.point.append(point4)
+
+    polygon = esdl.Polygon()
+    polygon.exterior = subpolygon
+
+    wind_park.geometry = polygon
+
+    # Create an OutPort and attach a profile to it
+    # Get ElectricityDemand InPort to connect to
+    electricity_demand_in_port_id = energy_system_handler.get_by_id('electricity-demand-in-port-ID')
+
+    wind_park_out_port = esdl.OutPort(id='wind-park-out-port-ID', connectedTo=[electricity_demand_in_port_id])
+    # Get the electricity commodity by ID
+    electricity_commodity = energy_system_handler.get_by_id('electricity-commodity-ID')
+    wind_park_out_port.carrier = electricity_commodity
+
+    # Get EDR wind profile
     edr_client = EDRClient()
 
     profiles_list = edr_client.get_objects_list("InfluxDBProfile")
+
+    e1_test_influxdb_profile = edr_client.get_object_esdl(
+        '/edr/Public/Profiles/North Sea Energy/profile_kW_2015_Hub_east_160m - power_kW [POWER in kW].edd')
+    # # Hack for now
+    # TODO: Explain
+    e1_test_influxdb_profile.host = 'https://' + e1_test_influxdb_profile.host
+    # WindPark with 100 wind turbines
+    e1_test_influxdb_profile.multiplier = 100.0
+
+    wind_park_out_port.profile.append(e1_test_influxdb_profile)
+    wind_park.port.append(wind_park_out_port)
+
+    # Add WindPark to the area
+
+    energy_system_area: esdl.Area = energy_system.instance[0].area
+    energy_system_area.asset.append(wind_park)
+
+    energy_system_handler.save(folder_name + "/" + file_name_to_save)
 
 
 # Write EnergyAsset parameters to CSV
@@ -178,3 +232,24 @@ def tutorial4_esdl(folder_name, file_name):
     asset_parameters.to_csv(filename,
                             index=False,
                             sep=';')
+
+
+def test_retrieve_profile():
+    edr_client = EDRClient()
+    profiles_list = edr_client.get_objects_list("InfluxDBProfile")
+
+    for profile_info in profiles_list:
+        influxdb_profile = edr_client.get_object_esdl(profile_info.id)
+
+        # Hack for now
+        influxdb_profile.host = "edr-profiles.hesi.energy"
+
+        print(influxdb_profile.name)
+
+        prof_mngr = InfluxDBProfileManager.create_esdl_influxdb_profile_manager(
+            esdl_profile=influxdb_profile,
+            use_ssl=True,
+        )
+
+        for i in range(0, 10):
+            print(prof_mngr.profile_data_list[i])

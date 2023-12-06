@@ -6,7 +6,7 @@
         <port xsi:type="esdl:OutPort" id="natural-gas-import-out-port-ID" carrier="natural-gas-commodity-ID" connectedTo="power-plant-in-port-ID"/>
         <geometry xsi:type="esdl:Point" lat="52.044" lon="4.3004"/>
       </asset>
-      <asset xsi:type="esdl:PowerPlant" power="2000000000.0" id="gas-powered-power-plant-ID" name="GasPowered_PowerPlant" efficiency="0.6">
+      <asset xsi:type="esdl:PowerPlant" power="2000000000.0" id="gas-powered-power-plant-ID" name="GasPowered_PowerPlant" efficiency="0.7">
         <port xsi:type="esdl:InPort" id="power-plant-in-port-ID" connectedTo="natural-gas-import-out-port-ID" carrier="natural-gas-commodity-ID"/>
         <port xsi:type="esdl:OutPort" id="power-plant-out-port-ID" carrier="electricity-commodity-ID" connectedTo="electricity-demand-in-port-ID"/>
         <geometry xsi:type="esdl:Point" lat="52.044" lon="4.3008"/>
