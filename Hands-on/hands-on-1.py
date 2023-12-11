@@ -28,19 +28,9 @@ if __name__ == '__main__':
 
     ### Start the hands-on part
     # TODO: Connect Import and Transformer
-    # Create and assign an OutPort for/to Import
-
-    # OutPort that connects to other assets
-    electricity_import_out_port = esdl.OutPort(id="import-out-port-ID")
-    # Assign the commodity to he port
-    electricity_import.port.append(electricity_import_out_port)
-    # Create and assign an InPort for/to Transformer
-    power_plant_in_port = esdl.InPort(id="power-plant-in-port-ID", connectedTo=[electricity_import_out_port])
-    transformer.port.append(power_plant_in_port)
-    # Connect the two assets
     # END TODO
 
     ### End the hands-on part
 
     # Save the ESDL
-    energy_system_handler.save('Hands_On.esdl')
+    energy_system_handler.save('Hands_On_1.esdl')

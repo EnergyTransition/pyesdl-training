@@ -4,7 +4,7 @@ from esdl import esdl
 if __name__ == '__main__':
     energy_system_handler = EnergySystemHandler()
 
-    energy_system: esdl.EnergySystem = energy_system_handler.load_file('Hands_On.esdl')
+    energy_system: esdl.EnergySystem = energy_system_handler.load_file('Hands_On1.esdl')
 
     # Create and add EnergySystemInformation and Carriers to the EnergySystem
     energy_system_information = esdl.EnergySystemInformation(id="es_information-ID")
@@ -22,4 +22,4 @@ if __name__ == '__main__':
 
 
     # Save the ESDL
-    energy_system_handler.save('Hands_On.esdl')
+    energy_system_handler.save('Hands_On2.esdl')
