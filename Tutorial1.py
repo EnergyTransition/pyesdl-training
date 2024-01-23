@@ -3,9 +3,11 @@ from esdl.edr.client import EDRClient
 from esdl.esdl_handler import EnergySystemHandler
 import pandas as pd
 from esdl.profiles.influxdbprofilemanager import InfluxDBProfileManager
-from setuptools.msvc import winreg
 
-def tutorial1_esdl(folder_name, file_name):
+if __name__ == '__main__':
+    folder_name = "ESDLs"
+    file_name = "Tutorial1.esdl"
+
     # Create an EnergySystemHandler - a class that helps a developer to read and write ESDL-files
     energy_system_handler = EnergySystemHandler()
 
@@ -22,7 +24,6 @@ def tutorial1_esdl(folder_name, file_name):
                                                                      inst_title="Tutorial1_Instance",
                                                                      area_title="Tutorial1_Area")
     # END TODO
-
 
     # Get the energy system area to be able to append assets later on
     # To make the type explicit, use ": esdl.Area"
@@ -59,7 +60,7 @@ def tutorial1_esdl(folder_name, file_name):
 
     # OutPort that connects to other assets
     natural_gas_import_out_port = esdl.OutPort(id="natural-gas-import-out-port-ID")
-    # Assign the commodity to the port
+    # Assign the commodity to he port
     natural_gas_import_out_port.carrier = natural_gas_commodity
     natural_gas_import.port.append(natural_gas_import_out_port)
 
@@ -100,7 +101,7 @@ def tutorial1_esdl(folder_name, file_name):
     electricity_demand.port.append(electricity_demand_in_port)
     # Do not set quantity and unit now
     electricity_demand_profile = esdl.SingleValue(id="electricity-demand-profile-ID", value=800.0)
-    # Create QuantityAndUnitType
+    # Create QuantityAndUnitReference
     electricity_demand_qty_unit = esdl.QuantityAndUnitType(id='ed-megawatthour-ID', physicalQuantity='ENERGY',
                                                            unit='WATTHOUR', multiplier='MEGA',
                                                            description='Energy in MWh')
@@ -111,143 +112,3 @@ def tutorial1_esdl(folder_name, file_name):
 
     # Save the ESDL
     energy_system_handler.save(folder_name + "/" + file_name)
-
-
-# Load an existing ESDL file, iterate over ESDL elements, and change PowerPlant's efficiency
-def tutorial2_esdl(folder_name, file_name_to_edit, file_name_to_save):
-    energy_system_handler = EnergySystemHandler()
-    energy_system: esdl.EnergySystem = energy_system_handler.load_file(folder_name + "/" + file_name_to_edit)
-
-    print("Changing PowerPlant's efficiency...")
-    # Use eAllContents() to iterate over ESDL elements
-
-    # TODO: Check get_all_instances_of_type
-    for esdl_element in energy_system.eAllContents():
-        # Get the PowerPlant ESDL element
-        if isinstance(esdl_element, esdl.PowerPlant):
-            esdl_element.efficiency = 0.7
-    energy_system_handler.save(folder_name + "/" + file_name_to_save)
-
-
-# EDR client to get the wind profile
-def tutorial3_esdl(folder_name, file_name_to_edit, file_name_to_save):
-    energy_system_handler = EnergySystemHandler()
-
-    # Get the Tutorial2
-    energy_system: esdl.EnergySystem = energy_system_handler.load_file(folder_name + "/" + file_name_to_edit)
-
-    # Create a wind park
-    wind_park = esdl.WindPark(id='wind-park-ID', name='WindPark')
-
-    # Create a polygon
-    point1 = esdl.Point(lat=52.04386412846831, lon=4.3002596497535714)
-    point2 = esdl.Point(lat=52.04386577818243, lon=4.300523847341538)
-    point3 = esdl.Point(lat=52.04376349579175, lon=4.300515800714494)
-    point4 = esdl.Point(lat=52.043746173750776, lon=4.30023953318596)
-
-    subpolygon = esdl.SubPolygon()
-    subpolygon.point.append(point1)
-    subpolygon.point.append(point2)
-    subpolygon.point.append(point3)
-    subpolygon.point.append(point4)
-
-    polygon = esdl.Polygon()
-    polygon.exterior = subpolygon
-
-    wind_park.geometry = polygon
-
-
-    # Get ElectricityDemand InPort to connect to
-    electricity_demand_in_port_id = energy_system_handler.get_by_id('electricity-demand-in-port-ID')
-
-    # Create an OutPort and attach a profile to it
-    wind_park_out_port = esdl.OutPort(id='wind-park-out-port-ID', connectedTo=[electricity_demand_in_port_id])
-    # Get the electricity commodity by ID
-    electricity_commodity = energy_system_handler.get_by_id('electricity-commodity-ID')
-    wind_park_out_port.carrier = electricity_commodity
-
-    # Get EDR wind profile
-    edr_client = EDRClient()
-
-    profiles_list = edr_client.get_objects_list("InfluxDBProfile")
-
-    e1_test_influxdb_profile = edr_client.get_object_esdl(
-        '/edr/Public/Profiles/North Sea Energy/profile_kW_2015_Hub_east_160m - power_kW [POWER in kW].edd')
-    # WindPark with 100 wind turbines
-    e1_test_influxdb_profile.multiplier = 100.0
-
-    wind_park_out_port.profile.append(e1_test_influxdb_profile)
-    wind_park.port.append(wind_park_out_port)
-
-    # Add WindPark to the area
-
-    energy_system_area: esdl.Area = energy_system.instance[0].area
-    energy_system_area.asset.append(wind_park)
-
-    energy_system_handler.save(folder_name + "/" + file_name_to_save)
-
-
-# Write EnergyAsset parameters to CSV
-def tutorial4_esdl(folder_name, file_name):
-    energy_system_handler = EnergySystemHandler()
-    energy_system: esdl.EnergySystem = energy_system_handler.load_file(folder_name + "/" + file_name)
-
-    asset_types_list = []
-    asset_names_list = []
-    asset_ids_list = []
-    asset_powers_list = []
-    asset_efficiencies_list = []
-
-    asset_parameters = pd.DataFrame()
-
-    # get_all_instances_of_type
-    for esdl_element in energy_system.eAllContents():
-        if isinstance(esdl_element, esdl.EnergyAsset):
-
-            asset_types_list.append(esdl_element.eClass.name)
-            asset_ids_list.append(esdl_element.id)
-            asset_names_list.append(esdl_element.name)
-
-            if isinstance(esdl_element, esdl.Producer) or isinstance(esdl_element, esdl.Consumer) or isinstance(
-                    esdl_element, esdl.Conversion):
-                asset_powers_list.append(esdl_element.power)
-            else:
-                asset_powers_list.append("")
-
-            # if isinstance(esdl_element, esdl.Conversion):
-            if isinstance(esdl_element, esdl.PowerPlant):
-                asset_efficiencies_list.append(esdl_element.efficiency)
-            else:
-                asset_efficiencies_list.append("")
-
-    asset_parameters["Type"] = asset_types_list
-    asset_parameters["ID"] = asset_ids_list
-    asset_parameters["Name"] = asset_names_list
-    asset_parameters["Power"] = asset_powers_list
-    asset_parameters["Efficiency"] = asset_efficiencies_list
-
-    filename = 'asset_parameters.csv'
-    asset_parameters.to_csv(filename,
-                            index=False,
-                            sep=';')
-
-
-def test_retrieve_profile():
-    edr_client = EDRClient()
-    profiles_list = edr_client.get_objects_list("InfluxDBProfile")
-
-    for profile_info in profiles_list:
-        influxdb_profile = edr_client.get_object_esdl(profile_info.id)
-
-        # Hack for now
-        influxdb_profile.host = "edr-profiles.hesi.energy"
-
-        print(influxdb_profile.name)
-
-        prof_mngr = InfluxDBProfileManager.create_esdl_influxdb_profile_manager(
-            esdl_profile=influxdb_profile,
-            use_ssl=True,
-        )
-
-        for i in range(0, 10):
-            print(prof_mngr.profile_data_list[i])

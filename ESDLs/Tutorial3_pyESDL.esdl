@@ -21,7 +21,7 @@
       </asset>
       <asset xsi:type="esdl:WindPark" id="wind-park-ID" name="WindPark">
         <port xsi:type="esdl:OutPort" id="wind-park-out-port-ID" connectedTo="electricity-demand-in-port-ID" carrier="electricity-commodity-ID">
-          <profile xsi:type="esdl:InfluxDBProfile" startDate="2015-01-01T00:00:00.000000+0000" host="https://edr-profiles.hesi.energy" database="edr-profiles" measurement="profile_kW_2015_Hub_east_160m" name="profile_kW_2015_Hub_east_160m - power_kW [POWER in kW]" id="34f024d4-eb15-4cd3-85a7-ba47ca9b99e1" field="power_kW" endDate="2015-12-31T23:00:00.000000+0000" multiplier="100.0" port="443">
+          <profile xsi:type="esdl:InfluxDBProfile" startDate="2015-01-01T00:00:00.000000+0000" host="edr-profiles.hesi.energy" database="edr-profiles" measurement="profile_kW_2015_Hub_east_160m" name="profile_kW_2015_Hub_east_160m - power_kW [POWER in kW]" id="34f024d4-eb15-4cd3-85a7-ba47ca9b99e1" endDate="2015-12-31T23:00:00.000000+0000" multiplier="100.0" field="power_kW" port="443">
             <profileQuantityAndUnit xsi:type="esdl:QuantityAndUnitType" physicalQuantity="POWER" id="c7c61174-2abb-47e9-bc3f-2acecaee646d" multiplier="KILO" unit="WATT"/>
           </profile>
         </port>

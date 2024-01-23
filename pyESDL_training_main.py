@@ -18,4 +18,4 @@ if __name__ == '__main__':
     esdl_generator.tutorial3_esdl(folder_name, tutorial2_filename, tutorial3_filename)
 
     # Tutorial 4
-    esdl_generator.tutorial4_esdl(folder_name, tutorial3_filename)
+    #esdl_generator.tutorial4_esdl(folder_name, tutorial3_filename)
